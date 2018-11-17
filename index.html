@@ -4,47 +4,93 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
-        <title>VueJS + Socket.io chat</title>
+        <title>WebChat - dojocon</title>
 
         <style type="text/css">
+            * {
+                font-family: 'Montserrat', sans-serif;
+            }
             body {
-                background-color: #f1f2f6;
+                background-color: #f7f7f7;
                 height: 100%;
             }
-
             #app {
-                max-width: 500px;
+                max-width: 700px;
                 width: 100%;
                 margin: 0 auto;
             }
-            
             .messages {
-                border: 2px solid #a4b0be;
-                min-height: 15em;
+                border: 4px solid #eeeeee;
+                margin-bottom: 12px;
+                max-height: 30em;
+                height: 100%;
+                overflow-y: scroll;
             }
-            
             .message {
                 padding: 0.7rem;
-                border-bottom: 1px solid #a4b0be;
+                border-bottom: 2px solid #eeeeee;
             }
-
+            .message:last-child {
+                border-bottom: 0;
+            }
             .author {
                 font-weight: bold;
             }
+            h2 {
+                text-align: center;
+            }
+            button {
+                cursor: pointer;
+            }
+            input, button {
+                box-sizing: border-box;
+                outline: 0;
+                background-color: #eeeeee;
+                color: #393e46;
+                padding: 12px;
+                border: 4px solid #eeeeee;
+                width: 100%;
+                max-width: 100%;
+                transition: 0.25s ease-in-out all;
+            }
+            input:focus, textarea:focus {
+                border: 4px solid #d6d6d6;
+            }
+            button {
+                width: 35%;
+            }
+            button:hover {
+                border: 4px solid #393e46;
+                background-color: #393e46;
+                color: #fff;
+            }
+            input {
+                border-right: 2px solid #d6d6d6;
+            }
+            form {
+                display: flex;
+                flex-direction: row;
+                justify-content: stretch;
+                margin-top: 12px;
+            }
         </style>
+        <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"> 
     </head>
     <body>
         <div id="app">
-            <h4>dojocon 2018 vue webchat</h4>
+            <h2>The dojocon webchat!</h2>
 
             <div class="messages">
                 <div v-for="msg in messages" v-bind:key="msg.message" class="message">
                     <span class="author">{{ msg.username }} wrote:</span> {{ msg.message }}
                 </div>
+
+                <div class="message" v-if="messages.length <= 0">
+                    There are no messages
+                </div>
             </div>
 
             <form id="input" v-on:submit.prevent="sendMessage">
-                <input type="text" v-model="username" placeholder="Your name">
                 <input type="text" v-model="message" placeholder="Your message...">
                 <button type="submit">Send message</button>
             </form>
@@ -55,7 +101,7 @@
         <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
         <script src="https://con-socket.dojocasts.com/socket.io/socket.io.js"></script>
         <script type="text/javascript" defer>
-            const socket = io('https://con-socket.dojocasts.com')
+            const socket = io()
 
             const app = new Vue({
                 el: '#app',
@@ -63,12 +109,12 @@
                     return {
                         messages: [],
                         message: '',
-                        username: '',
+                        username: 'User',
                     }
                 },
                 methods: {
                     sendMessage () {
-                        if (this.message.trim().length <= 3 || this.username.trim().length <= 3) {
+                        if (this.message.trim().length <= 0) {
                             return
                         }
 
@@ -80,12 +126,24 @@
                         })
 
                         this.message = ''
+                    },
+                    askUsername () {
+                        const username = prompt('What is your username?', 'User')
+
+                        if (username.trim().length > 0) {
+                            this.username = username
+                        } else {
+                            this.askUsername()
+                        }
                     }
                 },
                 created () {
                     socket.on('message', (message) => {
                         this.messages.push(message)
                     })
+                },
+                mounted () {
+                    this.askUsername()
                 }
             })
         </script>
